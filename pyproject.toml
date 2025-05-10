@@ -30,6 +30,9 @@ dependencies = [
     "uvicorn>=0.34.0",
     "setuptools-scm>=8.2.0",
     "requests>=2.23.3",
+    "ipykernel>=6.29.5",
+    "seaborn>=0.13.2",
+    "matplotlib>=3.10.1",
 ]
 
 [project.optional-dependencies]
