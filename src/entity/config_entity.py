@@ -1,7 +1,7 @@
 import os
 from dataclasses import dataclass
+
 from dotenv import load_dotenv
-from typing import List, Dict
 
 root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 load_dotenv(os.path.join(root_dir, ".env"))
