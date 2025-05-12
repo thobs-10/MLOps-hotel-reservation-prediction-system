@@ -44,8 +44,8 @@ version_scheme = "release-branch-semver"
 
 [tool.ruff]
 line-length = 100
-select = ["E", "F", "W", "I", "C", "B"]
-ignore = ["E501"]
+lint.select = ["E", "F", "W", "I", "C", "B"]
+lint.ignore = ["E501"]
 
 [tool.ruff.isort]
 known-first-party = ["src"]
