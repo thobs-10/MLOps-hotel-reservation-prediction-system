@@ -43,7 +43,7 @@ write_to = "_version.py"
 version_scheme = "release-branch-semver"
 
 [tool.ruff]
-line-length = 100
+line-length = 88
 lint.select = ["E", "F", "W", "I", "C", "B"]
 lint.ignore = ["E501"]
 
