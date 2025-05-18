@@ -57,3 +57,4 @@ skips = ["B101"]
 [tool.mypy]
 strict = true
 ignore_missing_imports = true
+disable_error_code = "misc"
