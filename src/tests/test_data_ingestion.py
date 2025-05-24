@@ -35,3 +35,13 @@ def test_load_data_empty_file(mock_raw_data_patch: MonkeyPatch, mocker):
     data = load_raw_data()
     mock_read_csv.assert_called_once_with("data/raw/Hotel Reservations.csv")
     assert data.empty
+
+
+def test_load_data_invalid_format(mock_raw_data_patch: MonkeyPatch, mocker):
+    """Test load_data function with invalid format"""
+    mock_read_csv = mocker.patch(
+        "pandas.read_csv", side_effect=pd.errors.ParserError("Invalid format")
+    )
+    with pytest.raises(pd.errors.ParserError):
+        load_raw_data()
+    mock_read_csv.assert_called_once_with("data/raw/Hotel Reservations.csv")
