@@ -23,8 +23,8 @@ def sample_test_data() -> pd.DataFrame:
     """
     return pd.DataFrame(
         {
-            "feature1": [1, 2, 3, None],
-            "feature2": ["A", "B", "C", "D"],
+            "feature1": [1, 2, 3, None, 2],
+            "feature2": ["A", "B", "C", "D", "B"],
         }
     )
 
