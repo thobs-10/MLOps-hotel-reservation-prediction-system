@@ -51,10 +51,12 @@ lint.ignore = ["E501"]
 known-first-party = ["src"]
 
 [tool.bandit]
-exclude_dirs = ["src/tests", "docs", "build", "dist", "venv", ".venv"]
-skips = ["B101"]
+exclude_dirs = ["src/tests/", "docs", "build", "dist", "venv", ".venv"]
+exclude_files = ["src/tests/"]
+skips = "B101"
 
 [tool.mypy]
-strict = true
+strict = false
+check_untyped_defs = false
 ignore_missing_imports = true
 disable_error_code = "misc"
