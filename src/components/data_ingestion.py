@@ -10,14 +10,14 @@ from src.utils.main_utils import get_categorical_columns, get_numerical_columns
 
 
 @step(enable_cache=True)
-def load_data() -> pd.DataFrame:
+def load_raw_data() -> pd.DataFrame:
     """
     Load data from a CSV file.
     Returns:
         pd.DataFrame: Loaded DataFrame.
     """
     try:
-        file_path = DataIngestionConfig.raw_data_path
+        file_path: str = DataIngestionConfig.raw_data_path
         logger.info(f"loading data from {file_path}")
         return pd.read_csv(file_path)
     except FileNotFoundError as e:
