@@ -106,7 +106,12 @@ def handle_data_types(df: pd.DataFrame) -> pd.DataFrame:
     num_cols = get_numerical_columns(df)
     for col in num_cols:
         df[col] = pd.to_numeric(df[col], errors="coerce")
-
+    invalid_column = [
+        col for col in df.columns if col not in num_cols and col not in cat_cols
+    ]
+    if invalid_column:
+        logger.error(f"Invalid columns found: {invalid_column}.")
+        raise ValueError(f"Invalid columns found: {invalid_column}.")
     return df
 
 
