@@ -16,9 +16,7 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/*
 
 # install UV
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
-    mv /root/.cargo/bin/uv /usr/local/bin/uv && \
-    uv --version
+RUN pip install uv
 
 COPY pyproject.toml .
 COPY . .
