@@ -6,6 +6,7 @@ from src.components.data_ingestion import (
     handling_null_values,
     load_raw_data,
     remove_duplicates,
+    remove_irrelevant_columns,
 )
 
 
@@ -106,3 +107,23 @@ def test_handling_null_values_all_nulls():
     assert data["feature2"].isnull().sum() == 5
     with pytest.raises(ValueError):
         handling_null_values(data)  # Expecting an exception for all nulls
+
+
+def test_remove_irrelevant_columns_success(sample_test_data: pd.DataFrame):
+    """Test remove_irrelevant_columns function success"""
+    data = sample_test_data.copy()
+    data["Booking_ID"] = [1, 2, 3, 4, 5]
+    assert "Booking_ID" in data.columns
+    cleaned_data = remove_irrelevant_columns(data)
+    assert "Booking_ID" not in cleaned_data.columns
+    assert cleaned_data.shape == (5, 2)  # Only original columns should remain
+
+
+def test_remove_irrelevant_columns_no_irrelevant_columns(
+    sample_test_data: pd.DataFrame,
+):
+    """Test remove_irrelevant_columns function with no irrelevant columns"""
+    data = sample_test_data.copy()
+    assert "Booking_ID" not in data.columns
+    with pytest.raises(ValueError):
+        remove_irrelevant_columns(data)
