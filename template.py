@@ -7,7 +7,7 @@ logging.basicConfig(level=logging.INFO, format="[%(asctime)s]: %(message)s:")
 project_name = "src"
 
 list_of_files = [
-    "github/workflows/.gitkeep",
+    ".github/workflows/.gitkeep",
     "feature_store/__init__.py",
     f"{project_name}/__init__.py",
     "data/.gitkeep",
