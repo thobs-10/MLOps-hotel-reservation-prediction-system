@@ -81,7 +81,11 @@ def remove_irrelevant_columns(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: DataFrame without irrelevant columns.
     """
-
+    if irrelevant_columns not in df.columns:
+        logger.error(f"Irrelevant columns {irrelevant_columns} not found in DataFrame.")
+        raise ValueError(
+            f"Irrelevant columns {irrelevant_columns} not found in DataFrame."
+        )
     df.drop(columns=irrelevant_columns, inplace=True)
     return df
 
