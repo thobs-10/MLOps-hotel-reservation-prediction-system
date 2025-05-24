@@ -35,7 +35,7 @@ def remove_duplicates(df: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: DataFrame without duplicates.
     """
     df = df.drop_duplicates()
-    logger.info(f"Removed {df.shape[0]} duplicate rows")
+    logger.debug(f"DataFrame shape after removing duplicates: {df.shape}")
     return df
 
 
@@ -50,13 +50,24 @@ def handling_null_values(df: pd.DataFrame) -> pd.DataFrame:
     """
     logger.info("Performing data cleaning")
     features_with_null_values = [
-        features for features in df.columns if df[features].isnull().sum() >= 1
+        features
+        for features in df.columns
+        if df[features].isnull().sum() >= 1
+        and df[features].isnull().sum() < df.shape[0]
     ]
     for feature in features_with_null_values:
         if pd.api.types.is_numeric_dtype(df[feature]):
             df[feature] = df[feature].fillna(df[feature].mean())
         else:
             df[feature] = df[feature].fillna(df[feature].mode()[0])
+    # Handle columns with all null values
+    columns_with_all_nulls = [col for col in df.columns if df[col].isnull().all()]
+    if columns_with_all_nulls:
+        logger.exception(f"Columns with all null values: {columns_with_all_nulls}. ")
+        raise ValueError(
+            f"Columns with all null values: {columns_with_all_nulls}. "
+            "Please check the data source."
+        )
     logger.debug("Handled missing values successfully")
     return df
 
