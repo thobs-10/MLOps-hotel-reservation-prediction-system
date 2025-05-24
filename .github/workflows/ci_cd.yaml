@@ -40,6 +40,11 @@ jobs:
         run: |
           uv venv venv
           source venv/bin/activate
+        
+      - name: Install pre-commit explicitly (fallback)
+        run: |
+            source venv/bin/activate
+            uv add pre-commit
 
       - name: Analysing the code with ruff and pre-commit
         run: |
