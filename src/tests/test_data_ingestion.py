@@ -7,6 +7,7 @@ from src.components.data_ingestion import (
     load_raw_data,
     remove_duplicates,
     remove_irrelevant_columns,
+    handle_data_types,
 )
 
 
@@ -127,3 +128,24 @@ def test_remove_irrelevant_columns_no_irrelevant_columns(
     assert "Booking_ID" not in data.columns
     with pytest.raises(ValueError):
         remove_irrelevant_columns(data)
+
+
+def test_handle_data_types_success(sample_test_data: pd.DataFrame):
+    """Test handle_data_types function success"""
+    data = sample_test_data.copy()
+    data["feature1"] = data["feature1"].astype("float64")  # Change type to float
+    assert data["feature1"].dtype == "float64"
+    data["feature2"] = data["feature1"].astype("object")  # Change type to object
+    assert data["feature2"].dtype == "object"
+    cleaned_data = handle_data_types(data)
+    assert cleaned_data["feature1"].dtype == "float64"
+    assert cleaned_data["feature2"].dtype == "category"
+
+
+def test_handle_data_types_invalid_type(sample_test_data: pd.DataFrame):
+    """Test handle_data_types function with type not in numerical or categorical"""
+    data = sample_test_data.copy()
+    data["feature2"] = data["feature2"].astype("bool")  # Change type to str
+    assert data["feature2"].dtype == "bool"
+    with pytest.raises(ValueError):
+        handle_data_types(data)  # Expecting an exception for invalid type
