@@ -3,7 +3,9 @@ import pytest
 from pytest import MonkeyPatch
 
 from src.components.data_ingestion import (
+    handling_null_values,
     load_raw_data,
+    remove_duplicates,
 )
 
 
@@ -15,7 +17,7 @@ def test_load_data_success(
     data = load_raw_data()
     mock_read_csv.assert_called_once_with("data/raw/Hotel Reservations.csv")
     assert not data.empty
-    assert data.shape == (4, 2)
+    assert data.shape == (5, 2)
     assert list(data.columns) == ["feature1", "feature2"]
 
 
@@ -45,3 +47,62 @@ def test_load_data_invalid_format(mock_raw_data_patch: MonkeyPatch, mocker):
     with pytest.raises(pd.errors.ParserError):
         load_raw_data()
     mock_read_csv.assert_called_once_with("data/raw/Hotel Reservations.csv")
+
+
+def test_remove_duplicates_success(sample_test_data: pd.DataFrame):
+    """Test remove_duplicates function success"""
+    data = sample_test_data.copy()
+    assert data.shape == (5, 2)
+    cleaned_data = remove_duplicates(data)
+    assert cleaned_data.shape == (4, 2)
+
+
+def test_remove_duplicates_no_duplicates(sample_test_data: pd.DataFrame):
+    """Test remove_duplicates function with no duplicates"""
+    data = sample_test_data.copy()
+    data = data.drop_duplicates()
+    assert data.shape == (4, 2)
+    cleaned_data = remove_duplicates(data)
+    assert cleaned_data.shape == (4, 2)
+    assert cleaned_data.equals(data)
+
+
+def test_remove_ducplicates_all_duplicates(sample_test_data: pd.DataFrame):
+    """Test remove_duplicates function with all duplicates"""
+    data = sample_test_data.copy()
+    data = pd.concat([data, data])  # Duplicate all rows
+    assert data.shape == (10, 2)
+    cleaned_data = remove_duplicates(data)
+    assert cleaned_data.shape == (4, 2)
+    assert cleaned_data.equals(data.drop_duplicates())
+
+
+def test_handling_null_values_success(sample_test_data: pd.DataFrame):
+    """Test handling_null_values function success"""
+    data = sample_test_data.copy()
+    assert data["feature1"].isnull().sum() == 1
+    cleaned_data = handling_null_values(data)
+    assert cleaned_data["feature1"].isnull().sum() == 0
+
+
+def test_handling_null_values_no_nulls(sample_test_data: pd.DataFrame):
+    """Test handling_null_values function with no nulls"""
+    data = sample_test_data.copy()
+    data["feature1"] = data["feature1"].fillna(0)  # Fill nulls
+    assert data["feature1"].isnull().sum() == 0
+    cleaned_data = handling_null_values(data)
+    assert cleaned_data.equals(data)  # No changes expected
+
+
+def test_handling_null_values_all_nulls():
+    """Test handling_null_values function with all nulls"""
+    data = pd.DataFrame(
+        {
+            "feature1": [None, None, None, None, None],
+            "feature2": [None, None, None, None, None],
+        }
+    )
+    data["feature2"] = pd.Series([None, None, None, None, None])
+    assert data["feature2"].isnull().sum() == 5
+    with pytest.raises(ValueError):
+        handling_null_values(data)  # Expecting an exception for all nulls
