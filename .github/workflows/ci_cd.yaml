@@ -76,11 +76,6 @@ jobs:
           source venv/bin/activate
           uv build
 
-      - name: Verify Loguru installation
-        run: |
-          source venv/bin/activate
-          python -c "import loguru; print('Loguru version:', loguru.__version__)"
-
 #   push-and-publish:
 #     needs: [install-and-test, build-project]
 #     runs-on: ubuntu-latest
