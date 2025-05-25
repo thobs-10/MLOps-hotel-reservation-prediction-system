@@ -49,7 +49,7 @@ jobs:
       - name: Analysing the code with ruff and pre-commit
         run: |
           source venv/bin/activate
-          uv run SKIP=no-commit-to-branch pre-commit run --all-files
+          uv run pre-commit run --all-files
 
       - name: Run Unit tests
         run: |
