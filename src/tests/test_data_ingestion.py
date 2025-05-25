@@ -3,11 +3,11 @@ import pytest
 from pytest import MonkeyPatch
 
 from src.components.data_ingestion import (
+    handle_data_types,
     handling_null_values,
     load_raw_data,
     remove_duplicates,
     remove_irrelevant_columns,
-    handle_data_types,
 )
 
 
