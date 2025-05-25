@@ -1,6 +1,5 @@
 import os
 from dataclasses import dataclass
-from typing import Optional
 
 from dotenv import load_dotenv
 
@@ -10,19 +9,19 @@ load_dotenv(os.path.join(root_dir, ".env"))
 
 @dataclass
 class DataIngestionConfig:
-    raw_data_path: str = os.environ["RAW_DATA_PATH"]
+    raw_data_path: str = "data/raw/Hotel Reservations.csv"
 
 
 @dataclass
 class DataPreprocessingConfig:
-    processed_data_path: Optional[str] = os.environ["PROCESSED_DATA_PATH"]
+    processed_data_path: str = "data/processed_data/"
 
 
 @dataclass
 class FeatureEngineeringConfig:
-    feature_engineering_dir: Optional[str] = os.environ["FEATURES_PATH"]
+    feature_engineering_dir: str = "data/feature_store/"
 
 
 @dataclass
 class ModelTrainingConfig:
-    model_artifact_dir: Optional[str] = os.environ["MODEL_ARTIFACTS_PATH"]
+    model_artifact_dir: str = "src/models/artifacts/"
