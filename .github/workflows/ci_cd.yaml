@@ -44,7 +44,7 @@ jobs:
       - name: Install pre-commit explicitly (fallback)
         run: |
             source venv/bin/activate
-            uv add pre-commit
+            uv pip install pre-commit
 
       - name: Analysing the code with ruff and pre-commit
         run: |
