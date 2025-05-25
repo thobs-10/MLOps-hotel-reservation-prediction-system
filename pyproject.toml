@@ -47,7 +47,7 @@ line-length = 88
 lint.select = ["E", "F", "W", "I", "C", "B"]
 lint.ignore = ["E501"]
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 known-first-party = ["src"]
 
 [tool.bandit]
