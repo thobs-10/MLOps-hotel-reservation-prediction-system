@@ -41,20 +41,20 @@ jobs:
           uv venv venv
           source venv/bin/activate
 
-      - name: Install pre-commit explicitly (fallback)
-        run: |
-            source venv/bin/activate
-            uv pip install pre-commit
+    #   - name: Install pre-commit explicitly (fallback)
+    #     run: |
+    #         source venv/bin/activate
+    #         uv pip install pre-commit
 
       - name: Analysing the code with ruff and pre-commit
         run: |
           source venv/bin/activate
-          SKIP=no-commit-to-branch pre-commit run --all-files
+          uv run SKIP=no-commit-to-branch pre-commit run --all-files
 
       - name: Run Unit tests
         run: |
           source venv/bin/activate
-          pytest -n auto
+          uv run pytest -n auto
 
   build-project:
     needs: install-and-test
