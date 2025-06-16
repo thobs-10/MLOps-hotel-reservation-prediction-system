@@ -15,7 +15,7 @@ from src.utils.main_utils import (
 )
 
 
-def load_procesed_data() -> pd.DataFrame:
+def load_processed_data() -> pd.DataFrame:
     """
     Load processed data from a CSV file.
     Args:
@@ -58,7 +58,7 @@ def encode_categorical_columns(
         pd.DataFrame: DataFrame with encoded categorical columns.
     """
     label_encoder = generate_label_encoder()
-    categorical_columns: List[str] = FeatureEngineeringConstants.categorical_columns
+    categorical_columns: List[str] = FeatureEngineeringConstants().categorical_columns
     if not categorical_columns:
         raise ValueError("No categorical columns provided for encoding.")
     if label_encoder is None:
@@ -85,7 +85,7 @@ def separate_data(
     Returns:
         Tuple[pd.DataFrame, pd.Series]: Features DataFrame (X) and target variable Series (y).
     """
-    target_column: str = FeatureEngineeringConstants.target_column
+    target_column: str = FeatureEngineeringConstants().target_column
     if target_column not in df.columns:
         raise ValueError(f"Target column '{target_column}' not found in DataFrame.")
     X = df.drop(columns=[target_column], axis=1)
@@ -127,13 +127,13 @@ def get_important_features(
 
 
 def get_pca_feature_importance(
-    pca, columns: List[str]
+    X: pd.DataFrame, columns: List[str]
 ) -> Tuple[pd.DataFrame, List[str]]:
     """
     Get the most important original feature for each principal component.
     Returns a DataFrame and a list of most important feature names.
     """
-    pca, X_pca = fit_pca(pca, columns)
+    pca, X_pca = fit_pca(X, columns)
     n_pcs = pca.components_.shape[0]
     most_important = [np.abs(pca.components_[i]).argmax() for i in range(n_pcs)]
     most_important_names = [columns[most_important[i]] for i in range(n_pcs)]
@@ -148,7 +148,13 @@ def select_pca_features(X: pd.DataFrame, feature_names: list) -> pd.DataFrame:
     """
     Select columns from X based on feature_names.
     """
-    return X.loc[:, feature_names]
+    if "Most Important Feature" in X.columns:
+        return X[X["Most Important Feature"].isin(feature_names)]
+    else:
+        raise ValueError(
+            "DataFrame does not contain 'Most Important Feature' column. "
+            "Ensure that PCA feature importance has been calculated."
+        )
 
 
 def save_feature_engineered_data(
