@@ -27,7 +27,7 @@ class FeatureEngineeringConstants(BaseModel):
     ]
     pca_components: int = 2
 
-    target_column: str = "booking_status"
+    # target_column: str = "booking_status"
 
 
 # class DataPreprocessingConstants(BaseModel):

@@ -1,16 +1,17 @@
+from loguru import logger
+from zenml.pipelines import pipeline
+
 from src.components.data_validation import validate_cleaned_data
 from src.components.feature_engineering import (
-    load_processed_data,
-    generate_new_features,
     encode_categorical_columns,
-    separate_data,
+    generate_new_features,
     get_important_features,
     get_pca_feature_importance,
-    select_pca_features,
+    load_processed_data,
     save_feature_engineered_data,
+    select_pca_features,
+    separate_data,
 )
-from zenml.pipelines import pipeline
-from loguru import logger
 
 
 @pipeline(enable_cache=True)

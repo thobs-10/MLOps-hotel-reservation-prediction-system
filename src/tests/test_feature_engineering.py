@@ -3,13 +3,13 @@ import pytest
 from pytest import MonkeyPatch
 
 from src.components.feature_engineering import (
-    load_processed_data,
-    generate_new_features,
     encode_categorical_columns,
-    separate_data,
+    generate_new_features,
     get_important_features,
     get_pca_feature_importance,
+    load_processed_data,
     select_pca_features,
+    separate_data,
 )
 
 
@@ -36,7 +36,7 @@ def test_load_processed_data_file_not_found(
     with pytest.raises(FileNotFoundError):
         load_processed_data()
     mocker.patch("pandas.read_csv", side_effect=FileNotFoundError("File not found"))
-    mock_read_csv = mocker.patch("pandas.read_csv")
+    # mock_read_csv = mocker.patch("pandas.read_csv")
 
 
 def test_generate_new_features_success(sample_processed_data: pd.DataFrame):

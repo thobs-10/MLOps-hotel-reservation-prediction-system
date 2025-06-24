@@ -1,13 +1,14 @@
-from src.components.data_ingestion import (
-    load_raw_data,
-    remove_duplicates,
-    handling_null_values,
-    remove_irrelevant_columns,
-    handle_data_types,
-    save_cleaned_data,
-)
 from loguru import logger
 from zenml.pipelines import pipeline
+
+from src.components.data_ingestion import (
+    handle_data_types,
+    handling_null_values,
+    load_raw_data,
+    remove_duplicates,
+    remove_irrelevant_columns,
+    save_cleaned_data,
+)
 
 
 @pipeline(enable_cache=True)
