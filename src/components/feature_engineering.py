@@ -13,8 +13,10 @@ from src.utils.main_utils import (
     fit_pca,
     generate_label_encoder,
 )
+from zenml.steps import step
 
 
+@step(enable_cache=True)
 def load_processed_data() -> pd.DataFrame:
     """
     Load processed data from a CSV file.
@@ -34,6 +36,7 @@ def load_processed_data() -> pd.DataFrame:
         raise e
 
 
+@step
 def generate_new_features(df: pd.DataFrame) -> pd.DataFrame:
     """
     Generate new features from the DataFrame.
@@ -47,6 +50,7 @@ def generate_new_features(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+@step
 def encode_categorical_columns(
     df: pd.DataFrame,
 ) -> pd.DataFrame:
@@ -75,6 +79,7 @@ def encode_categorical_columns(
     return df
 
 
+@step
 def separate_data(
     df: pd.DataFrame,
 ) -> Tuple[pd.DataFrame, pd.Series]:
@@ -93,6 +98,7 @@ def separate_data(
     return X, y
 
 
+@step
 def get_important_features(
     X: pd.DataFrame,
     y: pd.Series,
@@ -107,7 +113,7 @@ def get_important_features(
         threshold: Minimum importance score (default: 0.05)
 
     Returns:
-        DataFrame containing only the important features
+        DataFrame containing only the important features and a list of their names.
     """
     selector = create_feature_importance_selector(X, y)
     if not isinstance(selector, ExtraTreesClassifier):
@@ -126,6 +132,7 @@ def get_important_features(
     return X[feature_names], feature_names.tolist()
 
 
+@step
 def get_pca_feature_importance(
     X: pd.DataFrame, columns: List[str]
 ) -> Tuple[pd.DataFrame, List[str]]:
@@ -144,6 +151,7 @@ def get_pca_feature_importance(
     return df, most_important_names
 
 
+@step
 def select_pca_features(X: pd.DataFrame, feature_names: list) -> pd.DataFrame:
     """
     Select columns from X based on feature_names.
@@ -157,6 +165,7 @@ def select_pca_features(X: pd.DataFrame, feature_names: list) -> pd.DataFrame:
         )
 
 
+@step
 def save_feature_engineered_data(
     df: pd.DataFrame,
     y: pd.Series,
