@@ -18,7 +18,7 @@ class FeatureEngineeringConstants(BaseModel):
         "no_of_weekend_nights",
         "no_of_week_nights",
     ]
-    target_column: str = "booking_status"
+    # target_column: str = "booking_status"
     new_features: List[str] = ["total_nights_stayed", "is_repeat_guest"]
     label_encoder_columns: List[str] = [
         "type_of_meal_plan",
