@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from loguru import logger
 from sklearn.ensemble import ExtraTreesClassifier
+from zenml.steps import step
 
 from src.entity.config_entity import DataPreprocessingConfig, FeatureEngineeringConfig
 from src.entity.constants import FeatureEngineeringConstants
@@ -13,7 +14,6 @@ from src.utils.main_utils import (
     fit_pca,
     generate_label_encoder,
 )
-from zenml.steps import step
 
 
 @step(enable_cache=True)
