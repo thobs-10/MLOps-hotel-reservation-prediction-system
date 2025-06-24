@@ -18,6 +18,8 @@ def load_raw_data() -> pd.DataFrame:
     """
     try:
         file_path: str = DataIngestionConfig.raw_data_path
+        if not file_path:
+            raise ValueError("File path is not set in the configuration.")
         logger.info(f"loading data from {file_path}")
         return pd.read_csv(file_path)
     except FileNotFoundError as e:
