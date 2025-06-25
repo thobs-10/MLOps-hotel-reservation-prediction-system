@@ -25,7 +25,7 @@ class FeatureEngineeringConstants(BaseModel):
         "room_type_reserved",
         "market_segment_type",
     ]
-    pca_components: int = 2
+    pca_components: int = 5
 
     # target_column: str = "booking_status"
 

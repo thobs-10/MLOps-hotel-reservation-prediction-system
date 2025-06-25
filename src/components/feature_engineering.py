@@ -62,7 +62,8 @@ def encode_categorical_columns(
         pd.DataFrame: DataFrame with encoded categorical columns.
     """
     label_encoder = generate_label_encoder()
-    categorical_columns: List[str] = FeatureEngineeringConstants().categorical_columns
+    fe_constants = FeatureEngineeringConstants()
+    categorical_columns: List[str] = fe_constants.categorical_columns
     if not categorical_columns:
         raise ValueError("No categorical columns provided for encoding.")
     if label_encoder is None:
@@ -90,7 +91,8 @@ def separate_data(
     Returns:
         Tuple[pd.DataFrame, pd.Series]: Features DataFrame (X) and target variable Series (y).
     """
-    target_column: str = FeatureEngineeringConstants().target_column
+    fe_constants = FeatureEngineeringConstants()
+    target_column: str = fe_constants.target_column
     if target_column not in df.columns:
         raise ValueError(f"Target column '{target_column}' not found in DataFrame.")
     X = df.drop(columns=[target_column], axis=1)
