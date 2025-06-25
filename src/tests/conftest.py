@@ -29,6 +29,29 @@ def sample_test_data() -> pd.DataFrame:
     )
 
 
+@pytest.fixture
+def mock_processed_data_patch(monkeypatch: MonkeyPatch) -> None:
+    """
+    Mock the environment variable for processed data path.
+    """
+    monkeypatch.setenv("PROCESSED_DATA_PATH", "data/processed_data/")
+
+
+@pytest.fixture
+def sample_processed_data() -> pd.DataFrame:
+    """
+    Sample processed data for testing.
+    """
+    return pd.DataFrame(
+        {
+            "feature1": [1, 2, 3, 4, 5],
+            "feature2": [1, 2, 3, 4, 5],
+            "feature3": [10, 20, 30, 40, 50],
+            "feature4": [0.1, 0.2, 0.3, 0.4, 0.5],
+        }
+    )
+
+
 @pytest.fixture(autouse=True)
 def mock_zenml_runtime():  # type: ignore[no-untyped-def]
     """Completely disable ZenML step execution during tests."""

@@ -18,16 +18,16 @@ class FeatureEngineeringConstants(BaseModel):
         "no_of_weekend_nights",
         "no_of_week_nights",
     ]
-    # target_column: str = "booking_status"
+    target_column: str = "booking_status"
     new_features: List[str] = ["total_nights_stayed", "is_repeat_guest"]
     label_encoder_columns: List[str] = [
         "type_of_meal_plan",
         "room_type_reserved",
         "market_segment_type",
     ]
-    pca_components: int = 2
+    pca_components: int = 5
 
-    target_column: str = "booking_status"
+    # target_column: str = "booking_status"
 
 
 # class DataPreprocessingConstants(BaseModel):

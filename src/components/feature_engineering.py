@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from loguru import logger
 from sklearn.ensemble import ExtraTreesClassifier
+from zenml.steps import step
 
 from src.entity.config_entity import DataPreprocessingConfig, FeatureEngineeringConfig
 from src.entity.constants import FeatureEngineeringConstants
@@ -15,7 +16,8 @@ from src.utils.main_utils import (
 )
 
 
-def load_procesed_data() -> pd.DataFrame:
+@step(enable_cache=True)
+def load_processed_data() -> pd.DataFrame:
     """
     Load processed data from a CSV file.
     Args:
@@ -34,6 +36,7 @@ def load_procesed_data() -> pd.DataFrame:
         raise e
 
 
+@step
 def generate_new_features(df: pd.DataFrame) -> pd.DataFrame:
     """
     Generate new features from the DataFrame.
@@ -47,6 +50,7 @@ def generate_new_features(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+@step
 def encode_categorical_columns(
     df: pd.DataFrame,
 ) -> pd.DataFrame:
@@ -58,7 +62,8 @@ def encode_categorical_columns(
         pd.DataFrame: DataFrame with encoded categorical columns.
     """
     label_encoder = generate_label_encoder()
-    categorical_columns: List[str] = FeatureEngineeringConstants.categorical_columns
+    fe_constants = FeatureEngineeringConstants()
+    categorical_columns: List[str] = fe_constants.categorical_columns
     if not categorical_columns:
         raise ValueError("No categorical columns provided for encoding.")
     if label_encoder is None:
@@ -75,6 +80,7 @@ def encode_categorical_columns(
     return df
 
 
+@step
 def separate_data(
     df: pd.DataFrame,
 ) -> Tuple[pd.DataFrame, pd.Series]:
@@ -85,7 +91,8 @@ def separate_data(
     Returns:
         Tuple[pd.DataFrame, pd.Series]: Features DataFrame (X) and target variable Series (y).
     """
-    target_column: str = FeatureEngineeringConstants.target_column
+    fe_constants = FeatureEngineeringConstants()
+    target_column: str = fe_constants.target_column
     if target_column not in df.columns:
         raise ValueError(f"Target column '{target_column}' not found in DataFrame.")
     X = df.drop(columns=[target_column], axis=1)
@@ -93,6 +100,7 @@ def separate_data(
     return X, y
 
 
+@step
 def get_important_features(
     X: pd.DataFrame,
     y: pd.Series,
@@ -107,7 +115,7 @@ def get_important_features(
         threshold: Minimum importance score (default: 0.05)
 
     Returns:
-        DataFrame containing only the important features
+        DataFrame containing only the important features and a list of their names.
     """
     selector = create_feature_importance_selector(X, y)
     if not isinstance(selector, ExtraTreesClassifier):
@@ -126,14 +134,15 @@ def get_important_features(
     return X[feature_names], feature_names.tolist()
 
 
+@step
 def get_pca_feature_importance(
-    pca, columns: List[str]
+    X: pd.DataFrame, columns: List[str]
 ) -> Tuple[pd.DataFrame, List[str]]:
     """
     Get the most important original feature for each principal component.
     Returns a DataFrame and a list of most important feature names.
     """
-    pca, X_pca = fit_pca(pca, columns)
+    pca, X_pca = fit_pca(X, columns)
     n_pcs = pca.components_.shape[0]
     most_important = [np.abs(pca.components_[i]).argmax() for i in range(n_pcs)]
     most_important_names = [columns[most_important[i]] for i in range(n_pcs)]
@@ -144,13 +153,21 @@ def get_pca_feature_importance(
     return df, most_important_names
 
 
+@step
 def select_pca_features(X: pd.DataFrame, feature_names: list) -> pd.DataFrame:
     """
     Select columns from X based on feature_names.
     """
-    return X.loc[:, feature_names]
+    if "Most Important Feature" in X.columns:
+        return X[X["Most Important Feature"].isin(feature_names)]
+    else:
+        raise ValueError(
+            "DataFrame does not contain 'Most Important Feature' column. "
+            "Ensure that PCA feature importance has been calculated."
+        )
 
 
+@step
 def save_feature_engineered_data(
     df: pd.DataFrame,
     y: pd.Series,

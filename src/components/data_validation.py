@@ -1,6 +1,7 @@
 import pandas as pd
 import pandera as pa
 from pandera import Check, Column, DataFrameSchema
+from zenml.steps import step
 
 
 def no_duplicates(df: pd.DataFrame) -> bool:
@@ -41,12 +42,11 @@ def define_cleaned_schema() -> DataFrameSchema:
     )
 
 
-cleaned_schema = define_cleaned_schema()
-
-
+@step(enable_cache=False)
 def validate_cleaned_data(df: pd.DataFrame) -> pd.DataFrame:
     """
     Validate the cleaned DataFrame using pandera schema.
     Raises an error if validation fails.
     """
+    cleaned_schema = define_cleaned_schema()
     return cleaned_schema.validate(df)
