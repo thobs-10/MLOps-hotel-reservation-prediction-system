@@ -179,6 +179,7 @@ mlruns/
 *.egg-info/
 cachedir/
 /data/
+/mlartifacts/
 .DS_Store
 *.pkl
 *.txt
@@ -189,5 +190,3 @@ cachedir/
 *.db
 *.sqlite3
 *MLmodel*
-*.yaml
-*.yml
