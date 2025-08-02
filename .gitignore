@@ -179,4 +179,14 @@ mlruns/
 *.egg-info/
 cachedir/
 /data/
+/mlartifacts/
 .DS_Store
+*.pkl
+*.txt
+*.json
+*.csv
+*.parquet
+*.log
+*.db
+*.sqlite3
+*MLmodel*

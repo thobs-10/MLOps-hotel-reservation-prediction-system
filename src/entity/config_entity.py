@@ -25,3 +25,10 @@ class FeatureEngineeringConfig:
 @dataclass
 class ModelTrainingConfig:
     model_artifact_dir: str = "src/models/artifacts/"
+    trained_models_dir: str = "src/models/trained_models/"
+    model_registry_path: str = "src/models/model_registry/"
+
+
+@dataclass
+class FeatureStoreConfig:
+    feature_store_repo_path: str = "/users/thobelasixpence/Documents/mlops-zoomcamp-project-2024/MLOPs-hotel-reservation-prediction-system/feature_store"

@@ -1,17 +1,22 @@
 import os
-from typing import List, Tuple
+from typing import Any, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 from loguru import logger
 from sklearn.ensemble import ExtraTreesClassifier
+from sklearn.preprocessing import LabelEncoder
 from zenml.steps import step
 
 from src.entity.config_entity import DataPreprocessingConfig, FeatureEngineeringConfig
 from src.entity.constants import FeatureEngineeringConstants
+from src.utils.feature_utils import (
+    prepare_feast_data,
+    save_to_feast_store,
+    validate_feast_data,
+)
 from src.utils.main_utils import (
     create_feature_importance_selector,
-    fit_pca,
     generate_label_encoder,
 )
 
@@ -30,7 +35,8 @@ def load_processed_data() -> pd.DataFrame:
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"File not found: {file_path}")
         logger.info(f"Loading processed data from {file_path}")
-        return pd.read_csv(file_path)
+        df = pd.read_parquet(os.path.join(file_path, "cleaned_data.parquet"))
+        return df
     except Exception as e:
         logger.error(f"Error loading processed data: {e}")
         raise e
@@ -53,7 +59,7 @@ def generate_new_features(df: pd.DataFrame) -> pd.DataFrame:
 @step
 def encode_categorical_columns(
     df: pd.DataFrame,
-) -> pd.DataFrame:
+) -> Tuple[pd.DataFrame, LabelEncoder]:
     """
     Encode categorical columns in the DataFrame using the provided LabelEncoder.
     Args:
@@ -77,19 +83,20 @@ def encode_categorical_columns(
         )
     for col in categorical_columns:
         df[col] = label_encoder.fit_transform(df[col])
-    return df
+    return df, label_encoder
 
 
 @step
 def separate_data(
     df: pd.DataFrame,
-) -> Tuple[pd.DataFrame, pd.Series]:
+    label_encoder: Optional[LabelEncoder] = None,
+) -> Tuple[pd.DataFrame, np.ndarray[Any, Any]]:
     """
     Separate the DataFrame into features (X) and target variable (y).
     Args:
         df (pd.DataFrame): DataFrame containing the data.
     Returns:
-        Tuple[pd.DataFrame, pd.Series]: Features DataFrame (X) and target variable Series (y).
+        Tuple[pd.DataFrame, np.ndarray[Any, Any]]: Features DataFrame (X) and target variable array (y).
     """
     fe_constants = FeatureEngineeringConstants()
     target_column: str = fe_constants.target_column
@@ -97,26 +104,29 @@ def separate_data(
         raise ValueError(f"Target column '{target_column}' not found in DataFrame.")
     X = df.drop(columns=[target_column], axis=1)
     y = df[target_column]
-    return X, y
+    y_encoded = label_encoder.fit_transform(y) if label_encoder else y
+    return X, y_encoded
 
 
 @step
 def get_important_features(
     X: pd.DataFrame,
-    y: pd.Series,
+    y: np.ndarray[Any, Any],
     threshold: float = 0.05,
-) -> Tuple[pd.DataFrame, List[str]]:
+) -> Tuple[pd.DataFrame, List[str], pd.DataFrame]:
     """
     Get features with importance scores above the threshold.
 
     Args:
         X: Features DataFrame
-        y: Target variable Series
+        y: Target variable numpy array
         threshold: Minimum importance score (default: 0.05)
 
     Returns:
         DataFrame containing only the important features and a list of their names.
     """
+    X_copy = X.copy()
+    X.drop(columns=["booking_date"], inplace=True, errors="ignore")
     selector = create_feature_importance_selector(X, y)
     if not isinstance(selector, ExtraTreesClassifier):
         raise ValueError("Selector must be an instance of ExtraTreesClassifier.")
@@ -131,61 +141,78 @@ def get_important_features(
     importances = selector.feature_importances_
     mask = importances > threshold
     feature_names = X.columns[mask]
-    return X[feature_names], feature_names.tolist()
-
-
-@step
-def get_pca_feature_importance(
-    X: pd.DataFrame, columns: List[str]
-) -> Tuple[pd.DataFrame, List[str]]:
-    """
-    Get the most important original feature for each principal component.
-    Returns a DataFrame and a list of most important feature names.
-    """
-    pca, X_pca = fit_pca(X, columns)
-    n_pcs = pca.components_.shape[0]
-    most_important = [np.abs(pca.components_[i]).argmax() for i in range(n_pcs)]
-    most_important_names = [columns[most_important[i]] for i in range(n_pcs)]
-    dic = {"PC{}".format(i + 1): most_important_names[i] for i in range(n_pcs)}
-    df = pd.DataFrame(
-        sorted(dic.items()), columns=["Principal Component", "Most Important Feature"]
-    )
-    return df, most_important_names
-
-
-@step
-def select_pca_features(X: pd.DataFrame, feature_names: list) -> pd.DataFrame:
-    """
-    Select columns from X based on feature_names.
-    """
-    if "Most Important Feature" in X.columns:
-        return X[X["Most Important Feature"].isin(feature_names)]
-    else:
-        raise ValueError(
-            "DataFrame does not contain 'Most Important Feature' column. "
-            "Ensure that PCA feature importance has been calculated."
-        )
+    return X[feature_names], feature_names.tolist(), X_copy
 
 
 @step
 def save_feature_engineered_data(
     df: pd.DataFrame,
-    y: pd.Series,
+    X_copy: pd.DataFrame,
+    y: np.ndarray[Any, Any],
 ) -> None:
     """
-    Save the feature engineered DataFrame and target variable to a CSV file.
+    Save the feature engineered DataFrame and target variable for both Feast and local backup.
+
+    This function saves data in two locations:
+    1. For Feast consumption (as specified in hotel_features.py)
+    2. As local backup in the feature store directory
+
     Args:
         df (pd.DataFrame): Feature engineered DataFrame.
-        y (pd.Series): Target variable Series.
+        y (np.ndarray[Any, Any]): Target variable array.
     """
     output_path: str = FeatureEngineeringConfig.feature_engineering_dir
     if not output_path:
         raise ValueError("Output path is not set in the configuration file.")
+
     try:
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        df.to_parquet(output_path, index=False)
-        y.to_csv(output_path.replace(".csv", "_target.csv"), index=False)
-        logger.info(f"Feature engineered data saved to {output_path}")
+        # Create directories
+        os.makedirs(output_path, exist_ok=True)
+        # os.makedirs("data/feature_store", exist_ok=True)
+
+        # Prepare data for Feast (combine features and target)
+        feast_df = prepare_feast_data(df, X_copy, y)
+        combined_df = feast_df.copy()
+
+        # Validate Feast data format
+        if validate_feast_data(feast_df):
+            logger.info("✅ Feast data validation passed")
+        else:
+            logger.error("❌ Feast data validation failed")
+            raise ValueError("Feast data validation failed. Check the data format.")
+
+        # 1. Save for Feast consumption (as specified in hotel_features.py)
+        feast_path = "data/feature_store/feast_hotel_features.parquet"
+        # feast_df.drop(columns=["booking_id"], inplace=True)
+        feast_df.to_parquet(feast_path, index=False)
+        logger.info(f"✅ Feast-ready data saved to {feast_path}")
+
+        # 2. Save local backup in feature store directory
+        backup_features_path = os.path.join(
+            output_path, "feast_hotel_features_backup.parquet"
+        )
+        backup_target_path = os.path.join(output_path, "hotel_target_backup.csv")
+
+        df.to_parquet(backup_features_path, index=False)
+        y_df = pd.DataFrame(y, columns=["booking_status"])
+        y_df.to_csv(backup_target_path, index=False)
+        # y.to_csv(backup_target_path, index=False)
+        logger.info(f"💾 Backup features saved to {backup_features_path}")
+        logger.info(f"💾 Backup target saved to {backup_target_path}")
+
+        # 3. Save additional formats for analysis
+        combined_data_path = os.path.join(
+            output_path, "hotel_features_with_target.parquet"
+        )
+        # combined_df = df.copy()
+        # combined_df["booking_status"] = y
+        combined_df.to_parquet(combined_data_path, index=False)
+        logger.info(f"📊 Combined data saved to {combined_data_path}")
+
+        save_to_feast_store()
+
+        logger.info("🎉 All feature engineered data saved successfully!")
+
     except Exception as e:
-        logger.error(f"Error saving feature engineered data: {e}")
+        logger.error(f"❌ Error saving feature engineered data: {e}")
         raise e

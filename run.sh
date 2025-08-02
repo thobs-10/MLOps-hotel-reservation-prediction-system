@@ -1,9 +1,10 @@
 #!/bin/bash
 
-# Function to install the package
-install_package() {
-  echo "Installing the package..."
-  pip install .
+# Function to build the package
+build_package() {
+  echo "Building the package and installing dependencies..."
+  uv build
+  uv install -e .
 }
 
 setup_zenml() {
@@ -12,12 +13,18 @@ setup_zenml() {
   zenml login --local
 }
 
+setup_pandera() {
+  echo "Setting up Pandera for data validation..."
+  export DISABLE_PANDERA_IMPORT_WARNING=True
+
+}
+
 # Function to start Feast UI
 start_feast() {
   echo "Starting Feast UI..."
-  cd my_feature_store/feature_repo
+  cd feature_store/
   feast ui
-  cd ../.. # Return to the root directory
+  cd .. # Return to the root directory
 }
 
 # Function to start MLflow server
@@ -29,7 +36,7 @@ start_mlflow() {
 # Function to run the pipelines
 run_pipelines() {
   echo "Running data ingestion, feature engineering, and model training pipelines..."
-  python run_pipelines.py
+  python src/run_pipelines.py
 }
 
 # Function to run pre-commit checks
