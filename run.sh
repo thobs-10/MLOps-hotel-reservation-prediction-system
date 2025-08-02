@@ -16,7 +16,7 @@ setup_zenml() {
 setup_pandera() {
   echo "Setting up Pandera for data validation..."
   export DISABLE_PANDERA_IMPORT_WARNING=True
-  
+
 }
 
 # Function to start Feast UI
