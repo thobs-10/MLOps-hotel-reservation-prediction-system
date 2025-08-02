@@ -1,5 +1,7 @@
+import os
 from typing import Dict
 
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from loguru import logger
 
@@ -8,6 +10,10 @@ from src.pipeline.inference_pipeline import (
     BookingResponse,
     InferencePipeline,
 )
+
+# Load environment variables
+load_dotenv()
+
 
 app = FastAPI()
 
@@ -46,7 +52,7 @@ if __name__ == "__main__":
 
     uvicorn.run(
         app,
-        host="0.0.0.0",
-        port=8000,
+        host=os.environ["HOST"],
+        port=int(os.environ["PORT"]),
         reload=True,
     )
