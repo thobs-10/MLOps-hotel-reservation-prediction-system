@@ -6,9 +6,7 @@ from src.components.feature_engineering import (
     encode_categorical_columns,
     generate_new_features,
     get_important_features,
-    get_pca_feature_importance,
     load_processed_data,
-    select_pca_features,
     separate_data,
 )
 
@@ -20,9 +18,13 @@ def test_load_processed_data_success(
 ):
     """Test load_processed_data function success"""
     mocker.patch("os.path.exists", return_value=True)
-    mock_read_csv = mocker.patch("pandas.read_csv", return_value=sample_processed_data)
+    mock_read_parquet = mocker.patch(
+        "pandas.read_parquet", return_value=sample_processed_data
+    )
     data = load_processed_data()
-    mock_read_csv.assert_called_once_with("data/processed_data/")
+    mock_read_parquet.assert_called_once_with(
+        "data/processed_data/cleaned_data.parquet"
+    )
     assert not data.empty
     assert data.shape == (5, 4)
     assert list(data.columns) == ["feature1", "feature2", "feature3", "feature4"]
@@ -35,7 +37,7 @@ def test_load_processed_data_file_not_found(
     mocker.patch("os.path.exists", return_value=False)
     with pytest.raises(FileNotFoundError):
         load_processed_data()
-    mocker.patch("pandas.read_csv", side_effect=FileNotFoundError("File not found"))
+    mocker.patch("pandas.read_parquet", side_effect=FileNotFoundError("File not found"))
     # mock_read_csv = mocker.patch("pandas.read_csv")
 
 
@@ -69,8 +71,7 @@ def test_encode_categorical_columns_success(sample_processed_data: pd.DataFrame)
     data["room_type_reserved"] = ["cat1", "cat2", "cat1", "cat3", "cat2"]
     data["market_segment_type"] = ["low", "medium", "high", "medium", "low"]
 
-    encoded_data = encode_categorical_columns(data)
-
+    encoded_data, _ = encode_categorical_columns(data)
     assert "type_of_meal_plan" in encoded_data.columns
     assert encoded_data["type_of_meal_plan"].dtype == "int64"
     assert set(encoded_data["type_of_meal_plan"].unique()) == {0, 1, 2}
@@ -158,7 +159,7 @@ def test_get_important_features_success(sample_processed_data: pd.DataFrame):
     data["booking_status"] = [1, 0, 1, 0, 1]
 
     X, y = separate_data(data)
-    important_features, feature_names = get_important_features(X, y)
+    important_features, feature_names, _ = get_important_features(X, y.to_numpy())
 
     assert isinstance(important_features, pd.DataFrame)
     assert isinstance(feature_names, list)
@@ -190,27 +191,3 @@ def test_get_important_features_empty_dataframe(
     with pytest.raises(ValueError):
         get_important_features(data, pd.Series())
     assert sample_processed_data.equals(sample_processed_data)
-
-
-def test_get_pca_feature_importance_success(sample_processed_data: pd.DataFrame):
-    """Test get_pca_feature_importance function success"""
-    data = sample_processed_data.copy()
-    data["booking_status"] = [1, 0, 1, 0, 1]
-    X, _ = separate_data(data)
-    columns = ["feature1", "feature2", "feature3", "feature4"]
-    pca_df, important_features = get_pca_feature_importance(X, columns)
-    assert isinstance(pca_df, pd.DataFrame)
-    assert isinstance(important_features, list)
-
-
-def test_select_pca_features_success(sample_processed_data: pd.DataFrame):
-    """Test select_pca_features function success"""
-    data = sample_processed_data.copy()
-    data["booking_status"] = [1, 0, 1, 0, 1]
-    X, _ = separate_data(data)
-    # columns = ["feature1", "feature2", "feature3", "feature4"]
-    X, feature_list = get_important_features(X, data["booking_status"], threshold=0.05)
-    pca_df, most_important_features = get_pca_feature_importance(X, feature_list)
-    selected_features = select_pca_features(pca_df, most_important_features)
-    assert isinstance(selected_features, pd.DataFrame)
-    assert selected_features.shape[1] == 2
