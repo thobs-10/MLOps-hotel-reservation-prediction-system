@@ -1,18 +1,18 @@
 import os
 from typing import Dict
 
+import pandas as pd
 from dotenv import load_dotenv
 from fastapi import FastAPI, Response
 from loguru import logger
 from prometheus_client import Counter, Histogram, generate_latest
-import pandas as pd
+
 from src.pipeline.inference_pipeline import (
     BookingRequest,
     BookingResponse,
     InferencePipeline,
 )
 from src.utils.model_retriain_utils import monitor_drift_and_accuracy
-
 
 load_dotenv()
 
@@ -28,7 +28,7 @@ PREDICTION_LATENCY = Histogram(
 PREDICTION_LOG_PATH = os.getenv("PREDICTION_LOG_PATH", "src/logs/prediction_logs.csv")
 
 
-def log_prediction(request: BookingRequest, prediction: BookingResponse):
+def log_prediction(request: BookingRequest, prediction: BookingResponse) -> None:
     """Log request and prediction to a CSV file for monitoring/retraining."""
     try:
         # Convert request and prediction to dicts
@@ -57,7 +57,7 @@ async def read_root() -> Dict[str, str]:
 
 
 @app.get("/metrics")
-def metrics():
+def metrics() -> Response:
     return Response(generate_latest(), media_type="text/plain")
 
 
@@ -79,7 +79,7 @@ async def predict_booking(request: BookingRequest) -> BookingResponse:
             raise e
 
 
-def check_model_performance_and_trigger_retraining():
+def check_model_performance_and_trigger_retraining() -> None:
     """
     Example function: Check logged predictions and trigger retraining if needed.
     You can implement drift/accuracy checks here and call your retraining pipeline.
@@ -115,7 +115,7 @@ if __name__ == "__main__":
 
     uvicorn.run(
         app,
-        host=os.environ.get("HOST", "0.0.0.0"),
-        port=int(os.environ.get("PORT", 8000)),
+        host=os.environ.get("HOST", "0.0.0.0"),  # nosec
+        port=int(os.environ.get("PORT", 8000)),  # nosec
         reload=True,
     )
