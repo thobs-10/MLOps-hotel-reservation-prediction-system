@@ -36,13 +36,23 @@ start_mlflow() {
 # Function to run the pipelines
 run_pipelines() {
   echo "Running data ingestion, feature engineering, and model training pipelines..."
+  build_package
+  setup_zenml
+  setup_pandera
+  # start_feast
+  start_mlflow
+  sleep 5 # Wait for Feast and MLflow to start
   python src/run_pipelines.py
 }
-
+# function to spin up the docker compose
+setup_docker_compose() {
+  echo "Setting up Docker Compose..."
+  docker compose up --build
+}
 # Function to run pre-commit checks
 run_pre_commit() {
   echo "Running pre-commit checks..."
-  SKIP=no-commit-to-branch pre-commit --files src/
+  SKIP=no-commit-to-branch pre-commit run --all-files
 }
 # clean codebase
 clean() {
@@ -67,21 +77,15 @@ fi
 # Main execution
 echo "Starting the development process..."
 
-# Install the package
-install_package
-
-# Start feast ui and mlflow in the background
-setup_zenml &
-start_feast &
-start_mlflow &
-
-# Wait for feast and mlflow to finish starting up.
-sleep 5
-
 # Run the pipelines
 run_pipelines
-
+sleep 5
 # Run pre-commit checks
 run_pre_commit
+# Set up Docker Compose
+setup_docker_compose
+sleep 10
+start_feast
+# Clean the codebase
 clean
 echo "Development process completed."
