@@ -1,13 +1,13 @@
 import os
+from datetime import datetime
+from typing import Dict, Optional, Tuple
+
 import pandas as pd
 from loguru import logger
-from datetime import datetime
-from typing import Optional, Dict, Tuple
+from scipy.stats import ks_2samp
+from sklearn.metrics import accuracy_score
 
 DRIFT_LOG_PATH = os.getenv("DRIFT_LOG_PATH", "src/logs/drift_logs.csv")
-
-from sklearn.metrics import accuracy_score
-from scipy.stats import ks_2samp
 
 
 def calculate_data_drift(
