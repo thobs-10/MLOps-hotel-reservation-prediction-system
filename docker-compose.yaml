@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  hotel-ml-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - PREDICTION_LOG_PATH=src/logs/prediction_logs.csv
+      - DRIFT_LOG_PATH=src/logs/drift_logs.csv
+    volumes:
+      - ./src/logs:/app/src/logs
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    depends_on:
+      - hotel-ml-api
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
