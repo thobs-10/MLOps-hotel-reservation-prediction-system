@@ -4,7 +4,7 @@
 build_package() {
   echo "Building the package and installing dependencies..."
   uv build
-  uv install -e .
+  uv pip install -e .
 }
 
 setup_zenml() {
